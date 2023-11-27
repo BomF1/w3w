@@ -20,12 +20,19 @@ class ElasticaIndexer
             unset($data['id']);
             $document = new \Elastica\Document($id, $data);
             $bulkData[] = $document;
-            
+
             if (count($bulkData) >= self::BULK_LIMIT) {
                 $index->getType('products')->addDocuments($bulkData);
                 $numberOfDocumentsIndexed++;
             }
         }
+
+        // zaindexovať zvyšok dát ak by ich bolo napr. 340 a limit je 100 tak while prejde 3 krát len ešte ostanú nezaindexované 40
+        if (!empty($bulkData)) {
+            $index->getType('products')->addDocuments($bulkData);
+            $numberOfDocumentsIndexed++;
+        }
+
         $stmt->closeCursor();
         $index->flush();
         $index->refresh();
